@@ -80,15 +80,13 @@ export const loginController = async (
   });
 
   if (!user) {
-    return reply.status(400).send(errorResponse<string>("user is not found"));
+    return reply.status(401).send(errorResponse("Invalid email or password"));
   }
 
-  const verifyPassword = await bcrypt.compare(password, user.passwordHash);
+  const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
 
-  if (!verifyPassword) {
-    return reply
-      .status(400)
-      .send(errorResponse<string>("password is incorrect"));
+  if (!isPasswordValid) {
+    return reply.status(401).send(errorResponse("Invalid email or password"));
   }
 
   const accessToken = generateAccessToken(user.id);

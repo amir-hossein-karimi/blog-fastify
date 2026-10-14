@@ -70,18 +70,17 @@ export const loginSchema: FastifySchema = {
   response: {
     200: {
       type: "object",
+      required: ["message", "data"],
       additionalProperties: false,
       properties: {
         message: { type: "string" },
         data: {
           type: "object",
+          required: ["accessToken", "refreshToken"],
+          additionalProperties: false,
           properties: {
-            accessToken: {
-              type: "string",
-            },
-            refreshToken: {
-              type: "string",
-            },
+            accessToken: { type: "string" },
+            refreshToken: { type: "string" },
           },
         },
       },
