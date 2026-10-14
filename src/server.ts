@@ -1,6 +1,7 @@
 import "dotenv/config";
 import Fastify from "fastify";
 import { prisma } from "./lib/prisma";
+import authRoutes from "./routes/auth.route";
 
 const app = Fastify({ logger: true });
 
@@ -18,6 +19,8 @@ app.get("/health", async () => {
     database: "connected",
   };
 });
+
+app.register(authRoutes, { prefix: "/auth" });
 
 const start = async () => {
   try {
