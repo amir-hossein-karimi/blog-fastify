@@ -2,6 +2,8 @@ import type { FastifyReply, FastifyRequest } from "fastify";
 import { prisma } from "../lib/prisma";
 import bcrypt from "bcryptjs";
 import { Prisma } from "../generated/prisma/client";
+import { errorResponse, normalizedString } from "../lib/utilities";
+import { generateAccessToken, generateRefreshToken } from "../lib/jwt";
 
 interface RegisterBody {
   name?: string;
@@ -15,16 +17,15 @@ export const registerController = async (
 ) => {
   try {
     const { name, email, password } = req.body;
-    const normalizedEmail = email.trim().toLowerCase();
 
     const existingUser = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
+      where: { email: normalizedString(email) },
     });
 
     if (existingUser) {
-      return reply.status(409).send({
-        message: "This email already exists",
-      });
+      return reply
+        .status(409)
+        .send(errorResponse<string>("This email already exists"));
     }
 
     const passwordHash = await bcrypt.hash(password, 12);
@@ -32,7 +33,7 @@ export const registerController = async (
     const user = await prisma.user.create({
       data: {
         name: (name || "").trim(),
-        email: normalizedEmail,
+        email: normalizedString(email),
         passwordHash,
       },
       select: {
@@ -55,9 +56,11 @@ export const registerController = async (
       error instanceof Prisma.PrismaClientKnownRequestError &&
       error.code === "P2002"
     ) {
-      return reply.status(409).send({
-        message: "An account with this email already exists",
-      });
+      return reply
+        .status(409)
+        .send(
+          errorResponse<string>("An account with this email already exists"),
+        );
     }
 
     throw error;
@@ -65,14 +68,37 @@ export const registerController = async (
 };
 
 export const loginController = async (
-  req: FastifyRequest,
+  req: FastifyRequest<{ Body: { email: string; password: string } }>,
   reply: FastifyReply,
 ) => {
+  const { email, password } = req.body;
+
+  const user = await prisma.user.findUnique({
+    where: {
+      email: normalizedString(email),
+    },
+  });
+
+  if (!user) {
+    return reply.status(400).send(errorResponse<string>("user is not found"));
+  }
+
+  const verifyPassword = await bcrypt.compare(password, user.passwordHash);
+
+  if (!verifyPassword) {
+    return reply
+      .status(400)
+      .send(errorResponse<string>("password is incorrect"));
+  }
+
+  const accessToken = generateAccessToken(user.id);
+  const refreshToken = generateRefreshToken(user.id);
+
   reply.status(200).send({
     message: "login successfully",
     data: {
-      accessToken: "",
-      refreshToken: "",
+      accessToken: accessToken,
+      refreshToken: refreshToken,
     },
   });
 };
