@@ -48,3 +48,44 @@ export const registerSchema: FastifySchema = {
     ...errorsSchema,
   },
 };
+
+export const loginSchema: FastifySchema = {
+  body: {
+    type: "object",
+    additionalProperties: false,
+    required: ["email", "password"],
+    properties: {
+      email: {
+        type: "string",
+        format: "email",
+        maxLength: 254,
+      },
+      password: {
+        type: "string",
+        minLength: 8,
+        maxLength: 72,
+      },
+    },
+  },
+  response: {
+    200: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        message: { type: "string" },
+        data: {
+          type: "object",
+          properties: {
+            accessToken: {
+              type: "string",
+            },
+            refreshToken: {
+              type: "string",
+            },
+          },
+        },
+      },
+    },
+    ...errorsSchema,
+  },
+};

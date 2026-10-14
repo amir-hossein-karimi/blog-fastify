@@ -63,3 +63,16 @@ export const registerController = async (
     throw error;
   }
 };
+
+export const loginController = async (
+  req: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  reply.status(200).send({
+    message: "login successfully",
+    data: {
+      accessToken: "",
+      refreshToken: "",
+    },
+  });
+};
