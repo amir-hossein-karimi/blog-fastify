@@ -1,4 +1,4 @@
-@SERVER_PORT = 8002
+@SERVER_PORT = 8001
 
 ### register
 POST http://localhost:{{SERVER_PORT}}/auth/register HTTP/1.1
